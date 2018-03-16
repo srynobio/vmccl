@@ -1,6 +1,6 @@
 ## Variation Model Collaboration Command Line tool.
 
-####Version: v1.0.1
+#### Version: v1.0.1
 
 Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation and comparison from fasta files, STDIN or text blob.
 
