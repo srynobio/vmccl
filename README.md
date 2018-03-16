@@ -2,7 +2,7 @@
 
 Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation and comparison from fasta files, STDIN or text blob.
 
-**Please keep in mind this tool only implements the VMC Sequence digest aspect of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). No JSON files are created or validated.**
+**Please keep in mind this tool only implements the VMC Sequence digest aspect of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file is not generated or validated.**
 
 ```
 $> vmccl -h
@@ -18,7 +18,7 @@ Options:
   --help, -h             display this help and exit
 ```
 
-Adding the `--vmc` option will return a base64 URL Encoded ID. All other options 
+Adding the `--vmc` option will return a base64 URL Encoded ID. All other options
 are self-explanatory with examples shown below.
 
 ## Installing
@@ -48,7 +48,7 @@ All `--stdin` and `blob` text will have newlines and spaces removed.
 
 #### stdin option:
 
-This example of stdin show the output with and without the `--vmc` option added 
+This example of stdin show the output with and without the `--vmc` option added
 
 ```
 $> wc -lmw irobot.txt
@@ -77,7 +77,7 @@ p6WvpVcb0/hJj5Y/4Za3o01Ln40R+Ijz
 $> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS" --vmc
 p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 
-``` 
+```
 
 #### fasta option:
 
@@ -87,4 +87,3 @@ $> vmccl.go --fasta NC_000019.10.fasta
 Description line:  NC_000019.10 Homo sapiens chromosome 19, GRCh38.p7 Primary Assembly
 VMCDigest ID:  IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl
 ```
-
