@@ -85,7 +85,7 @@ p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 #### fasta option:
 
 ```
-$> vmccl.go --fasta NC_000019.10.fasta
+$> vmccl --fasta NC_000019.10.fasta
 
 Description line:  NC_000019.10 Homo sapiens chromosome 19, GRCh38.p7 Primary Assembly
 VMCDigest ID:  IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl
