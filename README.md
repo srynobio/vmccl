@@ -43,6 +43,7 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 ```
 
+**Additional builds and features can be requested [here](https://github.com/srynobio/vmccl/issues)**
 
 ## Examples:
 
