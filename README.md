@@ -1,4 +1,4 @@
-## Variation Modelling Collaboration Command Line tool.
+## Variation Model Collaboration Command Line tool.
 
 Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation and comparison from fasta files, STDIN or text blob.
 
@@ -6,13 +6,14 @@ Lightweight command line implementation of the VMC SHA-512 algorithm to allow ra
 
 ```
 $> vmccl -h
+
 Usage: vmccl [--stdin] [--blob BLOB] [--vmc] [--fasta FASTA] [--length LENGTH]
 
 Options:
   --stdin                Read from stdin.
   --blob BLOB            Blob text to hash using the SHA-512 algorithm.
   --vmc                  With output the result of the above blob/stdin base on the current VMC spec.
-  --fasta FASTA          Will return VMC digest version of this fasta file.
+  --fasta FASTA          Will return VMC Sequence digest of this fasta file.
   --length LENGTH        Length of digest id to return. [default: 24]
   --help, -h             display this help and exit
 ```
@@ -22,19 +23,22 @@ are self-explanatory with examples shown below.
 
 ## Installing
 
-Easist method to run `vmccl` is to download the executable corresponding to your computer environment.
+Easiest method to run `vmccl` is to download the executable corresponding to your computer environment.
 
 *  Download
 
 OS | Platform | Link
 ---|---|---
-darwin | amd64 
-linux | amd64 | 
+darwin | amd64 | [darwin](https://github.com/srynobio/vmccl/releases)
+linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
-* Then run
+* Then run (example)
 
 ```
-$> vmccl_linux64 vmccl
+ $> wget https://github.com/srynobio/vmccl/releases/download/v1.0.0/vmccl_linux64 .
+ $> mv vmccl_linux64 vmccl
+ $> chmod a+x vmccl
+
 ```
 
 
