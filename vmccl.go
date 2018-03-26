@@ -108,7 +108,8 @@ func VMCDigest(bv []byte, truncate int) string {
 	hasher.Write(bv)
 
 	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil)[:truncate])
-	return sha
+	vmcsha := "VMC:GS_" + sha
+	return vmcsha
 }
 
 // --------------------------------------------------------------------- //

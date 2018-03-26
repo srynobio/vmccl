@@ -20,7 +20,7 @@ Options:
   --help, -h             display this help and exit
 ```
 
-Adding the `--vmc` option will return a base64 URL Encoded ID. All other options
+Adding the `vmc` option will return a base64 URL Encoded ID. All other options
 are self-explanatory with examples shown below.
 
 ## Installing
@@ -47,11 +47,11 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 ## Examples:
 
-All `--stdin` and `blob` text will have newlines and spaces removed.
+All `stdin` and `blob` text will have newlines and spaces removed.
 
 #### stdin option:
 
-This example of stdin show the output with and without the `--vmc` option added
+This example of stdin show the output with and without the `vmc` option added
 
 ```
 $> wc -lmw irobot.txt
@@ -61,13 +61,13 @@ $> cat irobot.txt | vmccl --stdin
 mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
 
 $> cat irobot.txt | vmccl --stdin --vmc
-mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
+VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
 
 $> cat irobot.txt | vmccl --stdin --length 60
 mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4/1oicIh
 
 $> cat irobot.txt | vmccl --stdin --vmc --length 60
-mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4_1oicIh
+VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4_1oicIh
 
 ```
 
@@ -78,7 +78,7 @@ $> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered
 p6WvpVcb0/hJj5Y/4Za3o01Ln40R+Ijz
 
 $> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS" --vmc
-p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
+VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 
 ```
 
@@ -88,5 +88,5 @@ p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 $> vmccl --fasta NC_000019.10.fasta
 
 Description line:  NC_000019.10 Homo sapiens chromosome 19, GRCh38.p7 Primary Assembly
-VMCDigest ID:  IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl
+VMCDigest ID:  VMC:GS_IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl
 ```
