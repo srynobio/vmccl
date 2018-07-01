@@ -22,37 +22,39 @@ func main() {
 	var args struct {
 		Stdin  bool   `help:"Read from stdin."`
 		Blob   string `help:"Blob text to hash using the SHA-512 algorithm."`
-		VMC    bool   `help:"With output the result of the above blob/stdin base on the current VMC spec."`
 		Fasta  string `help:"Will return VMC Sequence digest of this fasta file."`
 		VCF    string `help:"Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file."`
-		Length int    `help:"Length of digest id to return."`
+		Length int    `help:"Length of digest id to return. MAX: 64"`
 	}
 	args.Length = 24
 	arg.MustParse(&args)
 
+	// vmc fasta holder
+	fastaVMCFile := args.Fasta + ".vmc"
+
 	if len(args.Fasta) > 1 && len(args.VCF) < 1 {
-		digestFasta(args.Fasta, args.Length)
+		if _, err := os.Stat(fastaVMCFile); err != nil {
+			seqIDFile, err := os.Create(fastaVMCFile)
+			eCheck(err)
+			defer seqIDFile.Close()
+			digestFasta(args.Fasta, args.Length, seqIDFile)
+		}
 	} else if len(args.VCF) > 1 && len(args.Fasta) > 1 {
 
-		fastaVMCFile := args.Fasta + ".vmc"
 		// check if .fasta.vmc exists
 		if _, err := os.Stat(fastaVMCFile); err != nil {
 			seqIDFile, err := os.Create(fastaVMCFile)
 			eCheck(err)
 			defer seqIDFile.Close()
-			digestFastaVCF(args.Fasta, args.Length, seqIDFile)
+			digestFasta(args.Fasta, args.Length, seqIDFile)
+			//digestFastaVCF(args.Fasta, args.Length, seqIDFile)
 		}
 		digestVCF(args.VCF, args.Length)
 	} else if len(args.Blob) > 1 {
 
 		clean := spaceScrubber(args.Blob)
 		byteForm := []byte(clean)
-
-		if args.VMC {
-			fmt.Println(VMCDigest(byteForm, args.Length))
-		} else {
-			fmt.Println(Digest(byteForm, args.Length))
-		}
+		fmt.Println(Digest(byteForm, args.Length))
 
 	} else if args.Stdin {
 		scanner := bufio.NewScanner(os.Stdin)
@@ -63,12 +65,8 @@ func main() {
 		}
 		clean := spaceScrubber(stdinText)
 		toByte := []byte(clean)
+		fmt.Println(Digest(toByte, args.Length))
 
-		if args.VMC {
-			fmt.Println(VMCDigest(toByte, args.Length))
-		} else {
-			fmt.Println(Digest(toByte, args.Length))
-		}
 	} else {
 		panic("[ERROR] Required options not met.")
 	}
@@ -86,6 +84,7 @@ func spaceScrubber(i string) string {
 
 // --------------------------------------------------------------------- //
 
+/*
 func digestFastaVCF(inFile string, length int, wFile *os.File) {
 
 	// Lifted from gofasta-vmc.go
@@ -102,7 +101,8 @@ func digestFastaVCF(inFile string, length int, wFile *os.File) {
 
 		for _, record := range chunk.Data {
 
-			digestID := VMCDigest(record.Seq.Seq, length)
+			digestID := Digest(record.Seq.Seq, length)
+
 			description := string(record.Name)
 			splitDescription := strings.Split(description, " ")
 
@@ -114,10 +114,10 @@ func digestFastaVCF(inFile string, length int, wFile *os.File) {
 		}
 	}
 }
-
+*/
 // --------------------------------------------------------------------- //
 
-func digestFasta(file string, length int) {
+func digestFasta(file string, length int, wFile *os.File) {
 
 	// Lifted from gofasta-vmc.go
 	// Incoming fastq file.
@@ -132,20 +132,21 @@ func digestFasta(file string, length int) {
 		}
 
 		for _, record := range chunk.Data {
-			digestID := VMCDigest(record.Seq.Seq, length)
+			digestID := Digest(record.Seq.Seq, length)
+			description := string(record.Name)
+			splitDescription := strings.Split(description, " ")
 
 			fmt.Println("Description line: ", string(record.Name))
-			fmt.Println("VMCDigest ID: ", digestID)
+			fmt.Println("Digest ID: ", digestID)
+
+			// update fasta map.
+			fastaVMC[splitDescription[0]] = digestID
+
+			writeRecord := fmt.Sprintf("%s|%s|%s\n", splitDescription[0], digestID, description)
+			wFile.WriteString(writeRecord)
 		}
 	}
 }
-
-// --------------------------------------------------------------------- //
-/*
-for key, value := range fastaVMC {
-	fmt.Println("Key:", key, "Value:", value)
-}
-*/
 
 // --------------------------------------------------------------------- //
 
@@ -203,17 +204,6 @@ func digestVCF(file string, length int) {
 
 // Non VMC URLEncoding hash.
 func Digest(bv []byte, truncate int) string {
-	hasher := sha512.New()
-	hasher.Write(bv)
-
-	sha := base64.StdEncoding.EncodeToString(hasher.Sum(nil)[:truncate])
-	return sha
-}
-
-// --------------------------------------------------------------------- //
-
-// VMC implemented digest
-func VMCDigest(bv []byte, truncate int) string {
 	hasher := sha512.New()
 	hasher.Write(bv)
 
