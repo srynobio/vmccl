@@ -61,20 +61,21 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 `vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  `vmccl` will check for the presence of this file in the same location as the original for future operations.
 
 ```
-$> vmccl --fasta Chr1-GRCh37.p13.fasta
-$> cat Chr1-GRCh37.p13.fasta.vmc
+$> vmccl --fasta Chr1-GRCh37.fasta
+$> cat Chr1-GRCh37.fasta.vmc
 
 1|VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 ```
 
 #### VCF option:
 
-At this time to update a VCF file, an accompanying fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use the file found.
+At this time, to update a VCF file an accompanying fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use it for VMC_GS identifiers.
 
 **Note:**
 
 * If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annotations.
 * If your fasta file contains records not found in the VCF file they are skipped.
+* Uses and implementation of the `fasta.vmc` record file may change in the future as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely used.
 
 
 `vmccl` will parse a valid VCF file and add the following annotations:
