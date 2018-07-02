@@ -81,6 +81,8 @@ At this time, to update a VCF file an accompanying fasta file with identical uni
 `vmccl` will parse a valid VCF file and add the following annotations:
 
 ```
+$> vmccl --fasta Chr1-GRCh37.fasta --vcf clinvar_20171002.vcf
+
 Added to the VCF header:
 ##INFO=<ID=VMCGAID,Number=1,Type=String,Description="VMC Allele identifier">
 ##INFO=<ID=VMCGLID,Number=1,Type=String,Description="VMC Location identifier">
