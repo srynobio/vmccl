@@ -78,7 +78,7 @@ At this time, to update a VCF file an accompanying fasta file with identical uni
 * Uses and implementation of the `fasta.vmc` record file may change in the future as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely used.
 
 
-`vmccl` will parse a valid VCF file and add the following annotations:
+An example of parcing a VCF file with `vmccl` to include the following annotations:
 
 ```
 $> vmccl --fasta Chr1-GRCh37.fasta --vcf clinvar_20171002.vcf
