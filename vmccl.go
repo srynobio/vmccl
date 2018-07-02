@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -20,17 +21,25 @@ var fastaVMC = make(map[string]string)
 func main() {
 
 	var args struct {
-		Stdin  bool   `help:"Read from stdin."`
-		Blob   string `help:"Blob text to hash using the SHA-512 algorithm."`
-		Fasta  string `help:"Will return VMC Sequence digest of this fasta file."`
-		VCF    string `help:"Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file."`
-		Length int    `help:"Length of digest id to return. MAX: 64"`
+		Stdin   bool   `help:"Read from stdin."`
+		Blob    string `help:"Blob text to hash using the SHA-512 algorithm."`
+		Fasta   string `help:"Will return VMC Sequence digest of this fasta file."`
+		VCF     string `help:"Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file."`
+		LogFile string `help:"Filename for output log file."`
+		Length  int    `help:"Length of digest id to return. MAX: 64"`
 	}
 	args.Length = 24
+	args.LogFile = "VMCCL.log"
 	arg.MustParse(&args)
 
-	// vmc fasta holder
+	// VMC fasta record filename.
 	fastaVMCFile := args.Fasta + ".vmc"
+
+	// Creating log file.
+	f, err := os.OpenFile(args.LogFile, os.O_RDWR|os.O_CREATE, 0755)
+	eCheck(err)
+	defer f.Close()
+	log.SetOutput(f)
 
 	if len(args.Fasta) > 1 && len(args.VCF) < 1 {
 		if _, err := os.Stat(fastaVMCFile); err != nil {
@@ -47,9 +56,15 @@ func main() {
 			eCheck(err)
 			defer seqIDFile.Close()
 			digestFasta(args.Fasta, args.Length, seqIDFile)
-			//digestFastaVCF(args.Fasta, args.Length, seqIDFile)
+			digestVCF(args.VCF, args.Length)
+		} else {
+			seqIDFile, err := os.Open(fastaVMCFile)
+			eCheck(err)
+			defer seqIDFile.Close()
+
+			updateFastaMap(seqIDFile)
+			digestVCF(args.VCF, args.Length)
 		}
-		digestVCF(args.VCF, args.Length)
 	} else if len(args.Blob) > 1 {
 
 		clean := spaceScrubber(args.Blob)
@@ -70,54 +85,15 @@ func main() {
 	} else {
 		panic("[ERROR] Required options not met.")
 	}
-
+	log.Println("vmccl finished!")
 }
 
-// --------------------------------------------------------------------- //
-
-func spaceScrubber(i string) string {
-	cleanEnds := strings.TrimSpace(i)
-	noSpace := strings.Replace(cleanEnds, " ", "", -1)
-
-	return noSpace
-}
-
-// --------------------------------------------------------------------- //
-
-/*
-func digestFastaVCF(inFile string, length int, wFile *os.File) {
-
-	// Lifted from gofasta-vmc.go
-	// Incoming fastq file.
-	reader, err := fastx.NewDefaultReader(inFile)
-	if err != nil {
-		panic(err)
-	}
-
-	for chunk := range reader.ChunkChan(5000, 5) {
-		if chunk.Err != nil {
-			panic(chunk.Err)
-		}
-
-		for _, record := range chunk.Data {
-
-			digestID := Digest(record.Seq.Seq, length)
-
-			description := string(record.Name)
-			splitDescription := strings.Split(description, " ")
-
-			// update fasta map.
-			fastaVMC[splitDescription[0]] = digestID
-
-			writeRecord := fmt.Sprintf("%s|%s|%s\n", splitDescription[0], digestID, description)
-			wFile.WriteString(writeRecord)
-		}
-	}
-}
-*/
 // --------------------------------------------------------------------- //
 
 func digestFasta(file string, length int, wFile *os.File) {
+
+	log.Printf("Creating digest for each record in %s", file)
+	log.Printf("Fasta VMC file named: %s", wFile.Name())
 
 	// Lifted from gofasta-vmc.go
 	// Incoming fastq file.
@@ -136,9 +112,6 @@ func digestFasta(file string, length int, wFile *os.File) {
 			description := string(record.Name)
 			splitDescription := strings.Split(description, " ")
 
-			fmt.Println("Description line: ", string(record.Name))
-			fmt.Println("Digest ID: ", digestID)
-
 			// update fasta map.
 			fastaVMC[splitDescription[0]] = digestID
 
@@ -153,6 +126,9 @@ func digestFasta(file string, length int, wFile *os.File) {
 func digestVCF(file string, length int) {
 
 	outFile := strings.Replace(file, "vcf", "vmc.vcf", -1)
+
+	log.Printf("Creating VMC records for VCF file: %s", file)
+	log.Printf("Writing VCF records to file: %s", outFile)
 
 	fh, err := xopen.Ropen(file)
 	eCheck(err)
@@ -186,17 +162,22 @@ func digestVCF(file string, length int) {
 		// Check for alternate allele.
 		altAllele := variant.Alt()
 		if len(altAllele) > 1 {
-			panic("multiallelic variant found, please pre-run with vt.")
+			panic("Multi-allelic variant found, please pre-run vt on VCF file.")
 		}
 
-		seqID := fastaVMC[variant.Chromosome]
-		locationID := LocationDigest(seqID, variant)
-		alleleID := AlleleDigest(locationID, variant)
+		if seqID, ok := fastaVMC[variant.Chromosome]; ok {
 
-		variant.Info().Set("VMCGSID", seqID)
-		variant.Info().Set("VMCGLID", locationID)
-		variant.Info().Set("VMCGAID", alleleID)
-		writer.WriteVariant(variant)
+			locationID := LocationDigest(seqID, variant)
+			alleleID := AlleleDigest(locationID, variant)
+
+			variant.Info().Set("VMCGSID", seqID)
+			variant.Info().Set("VMCGLID", locationID)
+			variant.Info().Set("VMCGAID", alleleID)
+			writer.WriteVariant(variant)
+		} else {
+			log.Printf("Could not locate record for: %s in fasta file.", variant.Chromosome)
+			writer.WriteVariant(variant)
+		}
 	}
 }
 
@@ -235,6 +216,30 @@ func AlleleDigest(locationID string, vcf *vcfgo.Variant) string {
 	DigestAllele := Digest([]byte(allele), 24)
 	alleleID := fmt.Sprintf("VMC:GA_%s", DigestAllele)
 	return alleleID
+}
+
+// --------------------------------------------------------------------- //
+
+func updateFastaMap(file *os.File) {
+
+	log.Printf("Found fasta VMC record file: %s", file.Name())
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fileText := scanner.Text()
+		records := strings.SplitN(fileText, "|", 3)
+
+		fastaVMC[records[0]] = records[1]
+	}
+}
+
+// --------------------------------------------------------------------- //
+
+func spaceScrubber(i string) string {
+	cleanEnds := strings.TrimSpace(i)
+	noSpace := strings.Replace(cleanEnds, " ", "", -1)
+
+	return noSpace
 }
 
 // --------------------------------------------------------------------- //

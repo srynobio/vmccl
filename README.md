@@ -3,36 +3,42 @@
 </div>
 
 ## Variation Model Collaboration Command Line tool.
-#### Version: v1.0.2
+#### Version: 1.1.2
 
-Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation and comparison from fasta files, STDIN or text blob.
+Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation.
 
-**Please keep in mind this tool only implements the VMC Sequence digest aspect of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
+The follow input types are currently allowed:
+
+* Fasta
+* VCF
+* STDIN
+* text blobs.
+
+**Please keep in mind this tool only implements the VMC digest aspects of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
+
+## Usage
 
 ```
-$> vmccl -h
-
-Usage: vmccl [--stdin] [--blob BLOB] [--vmc] [--fasta FASTA] [--length LENGTH]
+$> vmccl --help
+Usage: vmccl [--stdin] [--blob BLOB] [--fasta FASTA] [--vcf VCF] [--logfile LOGFILE] [--length LENGTH]
 
 Options:
   --stdin                Read from stdin.
   --blob BLOB            Blob text to hash using the SHA-512 algorithm.
-  --vmc                  With output the result of the above blob/stdin base on the current VMC spec.
   --fasta FASTA          Will return VMC Sequence digest of this fasta file.
-  --length LENGTH        Length of digest id to return. [default: 24]
+  --vcf VCF              Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file.
+  --logfile LOGFILE      Filename for output log file. [default: vmccl.log]
+  --length LENGTH        Length of digest id to return. MAX: 64 [default: 24]
   --help, -h             display this help and exit
 ```
 
-Adding the `vmc` option will return a base64 URL Encoded ID. All other options
-are self-explanatory with examples shown below.
-
 ## Installing
 
-Easiest method to run `vmccl` is to download the executable corresponding to your computer environment.
+Easiest method to run `vmccl` is to download the most recent executable corresponding to your computer environment.
 
 *  Download
 
-OS | Platform | Link
+OS | Platform | Release
 ---|---|---
 darwin | amd64 | [darwin](https://github.com/srynobio/vmccl/releases)
 linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
@@ -40,7 +46,7 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 * Then run (example)
 
 ```
- $> wget https://github.com/srynobio/vmccl/releases/download/v1.0.0/vmccl_linux64 .
+ $> wget <release link> .
  $> mv vmccl_linux64 vmccl
  $> chmod a+x vmccl
 
@@ -52,7 +58,7 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 All `stdin` and `blob` text will have newlines and spaces removed.
 
-#### stdin option:
+#### STDIN option:
 
 This example of stdin show the output with and without the `vmc` option added
 
@@ -74,7 +80,7 @@ VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4
 
 ```
 
-#### blob option:
+#### Blob option:
 
 ```
 $> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS"
@@ -85,11 +91,38 @@ VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 
 ```
 
-#### fasta option:
+#### Fasta option:
+
+`vmccl` will run the VMC digest algorightm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extention added.  `vmccl` will check for the presence of this file in the same location as the original for future operations.
 
 ```
-$> vmccl --fasta NC_000019.10.fasta
+$> vmccl --fasta Chr1-GRCh37.p13.fasta
+$> cat Chr1-GRCh37.p13.fasta.vmc
 
-Description line:  NC_000019.10 Homo sapiens chromosome 19, GRCh38.p7 Primary Assembly
-VMCDigest ID:  VMC:GS_IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl
+1|VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 ```
+
+#### VCF option:
+
+At this time to update a VCF file, an accomping fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use the file found.
+
+**Note:**
+
+* If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annaotaions.
+* If your fasta file contains records not found in the VCF file they are skipped.
+
+
+`vmccl` will parse a valid VCF file and add the following annotations:
+
+```
+Added to the VCF header:
+##INFO=<ID=VMCGAID,Number=1,Type=String,Description="VMC Allele identifier">
+##INFO=<ID=VMCGLID,Number=1,Type=String,Description="VMC Location identifier">
+##INFO=<ID=VMCGSID,Number=1,Type=String,Description="VMC Sequence identifier">
+
+Added annotations to the VCF record:
+1       949523  183381  C       T       .       .       ALLELEID=181485;CLNDISDB=MedGen:C4015293,OMIM:616126,Orphanet:ORPHA319563;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification;CLNHGVS=NC_000001.10:g.949523C>T;CLNREVSTAT=no_assertion_criteria_provided;CLNSIG=Pathogenic;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;CLNVI=OMIM_Allelic_Variant:147571.0003;GENEINFO=ISG15:9636;MC=SO:0001587|nonsense;ORIGIN=1;RS=786201005;VMCGSID=VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U;VMCGLID=VMC:GL_VMC:GS_UqMzt_PvRNhrFl31m8N7SbCGdDpmAtsp;VMCGAID=VMC:GA_VMC:GS_-sajfzQq1Q_PfOAPMPQRodzFclkX8ksp
+
+
+```
+
