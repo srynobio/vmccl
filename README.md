@@ -1,7 +1,7 @@
 ## Variation Model Collaboration Command Line tool.
 
 <div align="center">
-<img src="https://github.com/srynobio/vmccl/logo/vmccllogo.png"><br><br>
+<img src="https://github.com/srynobio/vmccl/blob/vcf/logo/vmccllogo.png"><br><br>
 </div>
 
 #### Version: v1.0.2
