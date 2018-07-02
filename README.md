@@ -1,9 +1,8 @@
-## Variation Model Collaboration Command Line tool.
-
 <div align="center">
 <img src="https://github.com/srynobio/vmccl/blob/vcf/logo/vmccllogo.png"><br><br>
 </div>
 
+## Variation Model Collaboration Command Line tool.
 #### Version: v1.0.2
 
 Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation and comparison from fasta files, STDIN or text blob.
