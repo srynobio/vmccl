@@ -56,44 +56,9 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 ## Examples:
 
-All `stdin` and `blob` text will have newlines and spaces removed.
-
-#### STDIN option:
-
-This example of stdin show the output with and without the `vmc` option added
-
-```
-$> wc -lmw irobot.txt
-6041   70216  403176 irobot.txt
-
-$> cat irobot.txt | vmccl --stdin
-mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
-
-$> cat irobot.txt | vmccl --stdin --vmc
-VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
-
-$> cat irobot.txt | vmccl --stdin --length 60
-mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4/1oicIh
-
-$> cat irobot.txt | vmccl --stdin --vmc --length 60
-VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4_1oicIh
-
-```
-
-#### Blob option:
-
-```
-$> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS"
-p6WvpVcb0/hJj5Y/4Za3o01Ln40R+Ijz
-
-$> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS" --vmc
-VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
-
-```
-
 #### Fasta option:
 
-`vmccl` will run the VMC digest algorightm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extention added.  `vmccl` will check for the presence of this file in the same location as the original for future operations.
+`vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  `vmccl` will check for the presence of this file in the same location as the original for future operations.
 
 ```
 $> vmccl --fasta Chr1-GRCh37.p13.fasta
@@ -104,11 +69,11 @@ $> cat Chr1-GRCh37.p13.fasta.vmc
 
 #### VCF option:
 
-At this time to update a VCF file, an accomping fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use the file found.
+At this time to update a VCF file, an accompanying fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use the file found.
 
 **Note:**
 
-* If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annaotaions.
+* If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annotations.
 * If your fasta file contains records not found in the VCF file they are skipped.
 
 
@@ -122,7 +87,28 @@ Added to the VCF header:
 
 Added annotations to the VCF record:
 1       949523  183381  C       T       .       .       ALLELEID=181485;CLNDISDB=MedGen:C4015293,OMIM:616126,Orphanet:ORPHA319563;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification;CLNHGVS=NC_000001.10:g.949523C>T;CLNREVSTAT=no_assertion_criteria_provided;CLNSIG=Pathogenic;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;CLNVI=OMIM_Allelic_Variant:147571.0003;GENEINFO=ISG15:9636;MC=SO:0001587|nonsense;ORIGIN=1;RS=786201005;VMCGSID=VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U;VMCGLID=VMC:GL_VMC:GS_UqMzt_PvRNhrFl31m8N7SbCGdDpmAtsp;VMCGAID=VMC:GA_VMC:GS_-sajfzQq1Q_PfOAPMPQRodzFclkX8ksp
+```
 
+#### STDIN option:
+
+All `stdin` and `blob` text will have newlines and spaces removed.
+
+```
+$> wc -lmw irobot.txt
+6041   70216  403176 irobot.txt
+
+$> cat irobot.txt | vmccl --stdin
+VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
+
+$> cat irobot.txt | vmccl --stdin --length 60
+VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4_1oicIh
 
 ```
 
+#### Blob option:
+
+```
+$> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS"
+VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
+
+```
