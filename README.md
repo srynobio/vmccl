@@ -14,7 +14,7 @@ The follow input types are currently allowed:
 * STDIN
 * text blobs.
 
-**Please keep in mind this tool only implements the VMC digest aspects of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
+**Please keep in mind this tool only implements specfic aspects of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
 
 ## Usage
 
@@ -58,7 +58,7 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 #### Fasta option:
 
-`vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  `vmccl` will check for the presence of this file in the same location as the original for future operations.
+`vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  Future runs of `vmccl` will check for the presence of the `.vmc` file in the same location as the original fasta file.
 
 ```
 $> vmccl --fasta Chr1-GRCh37.fasta
@@ -66,19 +66,23 @@ $> cat Chr1-GRCh37.fasta.vmc
 
 1|VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 ```
+Leading Identifier (space seperated) | VMC Seq ID | Description line of fasta |
+-------------------------------------|------------|--------------------------|
+1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:
 
 #### VCF option:
 
-At this time, to update a VCF file an accompanying fasta file with identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta file and use it for VMC_GS identifiers.
+At this time, to update a VCF file, an accompanying fasta file with a identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta and collect VMC_GS identifiers.
 
 **Note:**
 
+* Only VCFs which have ran [vt decompose](https://genome.sph.umich.edu/wiki/Vt#Decompose) will be accepted.
 * If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annotations.
 * If your fasta file contains records not found in the VCF file they are skipped.
-* Uses and implementation of the `fasta.vmc` record file may change in the future as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely used.
+* Uses and implementation of the `fasta.vmc` record file may change in the future as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely available.
 
 
-An example of parcing a VCF file with `vmccl` to include the following annotations:
+An example of parcing a VCF file with `vmccl` will include the following annotations:
 
 ```
 $> vmccl --fasta Chr1-GRCh37.fasta --vcf clinvar_20171002.vcf
