@@ -23,8 +23,8 @@ func main() {
 	var args struct {
 		Stdin   bool   `help:"Read from stdin."`
 		Blob    string `help:"Blob text to hash using the SHA-512 algorithm."`
-		Fasta   string `help:"Will return VMC Sequence digest of this fasta file."`
-		VCF     string `help:"Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file."`
+		Fasta   string `help:"Will return VMC Sequence digest ID of this fasta file."`
+		VCF     string `help:"Will take input VCF file and updated to include VMC (sequence|location|allele) digest IDs."`
 		LogFile string `help:"Filename for output log file."`
 		Length  int    `help:"Length of digest id to return. MAX: 64"`
 	}
@@ -108,14 +108,19 @@ func digestFasta(file string, length int, wFile *os.File) {
 		}
 
 		for _, record := range chunk.Data {
+
+			// create the VMC seq digest id and add VMC prefix.
 			digestID := Digest(record.Seq.Seq, length)
+			fastaSeqID := fmt.Sprintf("VMC:GS_%s", digestID)
+
+			// get meta data for record.
 			description := string(record.Name)
 			splitDescription := strings.Split(description, " ")
 
 			// update fasta map.
-			fastaVMC[splitDescription[0]] = digestID
+			fastaVMC[splitDescription[0]] = fastaSeqID
 
-			writeRecord := fmt.Sprintf("%s|%s|%s\n", splitDescription[0], digestID, description)
+			writeRecord := fmt.Sprintf("%s|%s|%s\n", splitDescription[0], fastaSeqID, description)
 			wFile.WriteString(writeRecord)
 		}
 	}
@@ -125,21 +130,29 @@ func digestFasta(file string, length int, wFile *os.File) {
 
 func digestVCF(file string, length int) {
 
-	outFile := strings.Replace(file, "vcf", "vmc.vcf", -1)
-
 	log.Printf("Creating VMC records for VCF file: %s", file)
-	log.Printf("Writing VCF records to file: %s", outFile)
+	//	log.Printf("Writing VCF records to file: %s", outFile)
 
-	fh, err := xopen.Ropen(file)
-	eCheck(err)
-	defer fh.Close()
+	//	var outfile string
+	//f strings.HasSuffix(file, "gz") {
+	//	outFile = strings.Replace(file, "vcf.gz", "vmc.vcf.gz", -1)
+	//output = gzip.NewWriter(&buf)
+
+	//	}
+	// https://gist.github.com/mchirico/6147687
+
+	outFile := strings.Replace(file, "vcf", "vmc.vcf", -1)
 
 	// create the writer
 	output, err := os.Create(outFile)
 	eCheck(err)
 	defer output.Close()
 
-	// VCF reader
+	// VCF open and read
+	fh, err := xopen.Ropen(file)
+	eCheck(err)
+	defer fh.Close()
+
 	rdr, err := vcfgo.NewReader(fh, false)
 	eCheck(err)
 	defer rdr.Close()
@@ -189,15 +202,14 @@ func Digest(bv []byte, truncate int) string {
 	hasher.Write(bv)
 
 	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil)[:truncate])
-	vmcsha := "VMC:GS_" + sha
-	return vmcsha
+	return sha
 }
 
 // --------------------------------------------------------------------- //
 
 func LocationDigest(seqID string, vcfvar *vcfgo.Variant) string {
 
-	intervalString := fmt.Sprintf("%d:%d", uint64(vcfvar.Start()-1), uint64(vcfvar.End()))
+	intervalString := fmt.Sprintf("%d|%d", uint64(vcfvar.Start()-1), uint64(vcfvar.End()))
 	location := fmt.Sprintf("<Location|%s|<Interval|%s>>", seqID, intervalString)
 	DigestLocation := Digest([]byte(location), 24)
 
@@ -209,11 +221,10 @@ func LocationDigest(seqID string, vcfvar *vcfgo.Variant) string {
 
 func AlleleDigest(locationID string, vcf *vcfgo.Variant) string {
 
-	state := fmt.Sprint(vcf.Alt())
-
-	allele := fmt.Sprintf("<Allele:<Identifier:%s>:%s>", locationID, state)
-	//	allele := "<Allele:<Identifier:" + v.Location.id + ">:" + state + ">"
+	state := strings.Join(vcf.Alt(), "")
+	allele := fmt.Sprintf("<Allele|%s|%s>", locationID, state)
 	DigestAllele := Digest([]byte(allele), 24)
+
 	alleleID := fmt.Sprintf("VMC:GA_%s", DigestAllele)
 	return alleleID
 }

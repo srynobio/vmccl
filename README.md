@@ -68,7 +68,7 @@ $> cat Chr1-GRCh37.fasta.vmc
 ```
 Leading Identifier (space seperated) | VMC Seq ID | Description line of fasta |
 -------------------------------------|------------|--------------------------|
-1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:
+1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 
 #### VCF option:
 
@@ -119,3 +119,15 @@ $> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered
 VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 
 ```
+
+
+   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+156291 u0413537  20   0 12.396g 0.010t   2040 S  1378  1.4 854:00.34 ./vmccl-linux --fasta human_g1k_v37_decoy.fasta
+
+[u0413537@kingspeak36:vmcwork]$ time ./vmccl-linux --fasta human_g1k_v37_decoy.fasta
+
+
+
+real    69m15.154s
+user    480m26.563s
+sys     435m15.338s
