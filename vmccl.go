@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"compress/gzip"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -130,16 +131,12 @@ func digestFasta(file string, length int, wFile *os.File) {
 
 func digestVCF(file string, length int) {
 
-	outFName := strings.Replace(file, "vcf", "vmc.vcf", -1)
-	if strings.HasSuffix(outFName, ".gz") {
-		outFName = strings.Replace(outFName, ".gz", "", 1)
-	}
+	outFName := strings.Replace(file, "vcf", "vmc.vcf.gz", -1)
+	//if strings.HasSuffix(outFName, ".gz") {
+	//outFName = strings.Replace(outFName, ".gz", "", 1)
+	//}
 
-	fi, err := os.OpenFile(outFName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
-	eCheck(err)
-	defer fi.Close()
-
-	// VCF open and read
+	// open vcf file and read
 	fh, err := xopen.Ropen(file)
 	eCheck(err)
 	defer fh.Close()
@@ -148,17 +145,24 @@ func digestVCF(file string, length int) {
 	eCheck(err)
 	defer rdr.Close()
 
-	log.Printf("Creating VMC records for VCF file: %s", file)
-	log.Printf("Writing VCF records to file: %s", outFName)
-
 	// Add VMC INFO to the header.
 	rdr.AddInfoToHeader("VMCGSID", "1", "String", "VMC Sequence identifier")
 	rdr.AddInfoToHeader("VMCGLID", "1", "String", "VMC Location identifier")
 	rdr.AddInfoToHeader("VMCGAID", "1", "String", "VMC Allele identifier")
 
 	//create the new writer
-	writer, err := vcfgo.NewWriter(fi, rdr.Header)
+	fi, err := os.OpenFile(outFName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	eCheck(err)
+	defer fi.Close()
+
+	gzipWriter := gzip.NewWriter(fi)
+	defer gzipWriter.Close()
+
+	writer, err := vcfgo.NewWriter(gzipWriter, rdr.Header)
+	eCheck(err)
+
+	log.Printf("Creating VMC records for VCF file: %s", file)
+	log.Printf("Writing VCF records to file: %s", outFName)
 
 	for {
 		variant := rdr.Read()
