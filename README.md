@@ -67,7 +67,7 @@ Leading Identifier (space separated) | VMC Seq ID | Description line of fasta |
 -------------------------------------|------------|--------------------------|
 1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 
-**The importance of using the correct fasta files to generate `VMC_GS` cannot be stressed enough as even a change of a single base will generate a completely different sequence identifier.  This is especially important when considering sharing `VMC_GA` with other institutions.** 
+* **The importance of using the correct fasta files to generate `VMC_GS` cannot be stressed enough as even a change of a single base will generate a completely different sequence identifier.  This is especially important when considering sharing `VMC_GA` with other institutions.** 
 
 #### VCF option:
 
