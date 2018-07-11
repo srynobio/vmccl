@@ -42,7 +42,11 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
+	// f, err := os.OpenFile("access.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	//seqIDFile, err := os.OpenFile(fastaVMCFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	if len(args.Fasta) > 1 && len(args.VCF) < 1 {
+		// Open of append if fasta.vmc file exists.
 		if _, err := os.Stat(fastaVMCFile); err != nil {
 			seqIDFile, err := os.Create(fastaVMCFile)
 			eCheck(err)
@@ -131,7 +135,7 @@ func digestFasta(file string, length int, wFile *os.File) {
 
 func digestVCF(file string, length int) {
 
-	outFName := strings.Replace(file, "vcf", "vmc.vcf.gz", -1)
+	outFName := strings.Replace(file, "vcf", "vmc.vcf", -1)
 	//if strings.HasSuffix(outFName, ".gz") {
 	//outFName = strings.Replace(outFName, ".gz", "", 1)
 	//}
