@@ -54,45 +54,43 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 **Additional builds and features can be requested [here](https://github.com/srynobio/vmccl/issues)**
 
-## Examples:
+## Description
+
+Please review the [example]() section for best practices instructions on how to run `vmccl`.
 
 #### Fasta option:
 
-`vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  Future runs of `vmccl` will check for the presence of the `.vmc` file in the same location as the original fasta file.
+`vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  Subsequent runs of `vmccl` will check for the presence of the `fasta.vmc` file in the same location as the original fasta file.
 
-```
-$> vmccl --fasta Chr1-GRCh37.fasta
-$> cat Chr1-GRCh37.fasta.vmc
+The following is the format of the `fasta.vmc` file:
 
-1|VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
-```
 Leading Identifier (space seperated) | VMC Seq ID | Description line of fasta |
 -------------------------------------|------------|--------------------------|
 1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 
 #### VCF option:
 
-At this time, to update a VCF file, an accompanying fasta file with a identical unique sequence identifiers is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta and collect VMC_GS identifiers.
+Please review the [example]() section for best practices instructions on how to run `vmccl`.
+
+At this time to update a VCF file, an accompanying fasta file with a identical `Leading Identifier` is required.  If a `fasta.vmc` file has already been generated `vmccl` will look for it in the same location as the original fasta and collect the VMC_GS identifiers.
 
 **Note:**
 
 * Only VCFs which have ran [vt decompose](https://genome.sph.umich.edu/wiki/Vt#Decompose) will be accepted.
-* If your VCF file contains sequence identifiers not found in the fasta file, the record is printed to the new file without updated annotations.
+* If your VCF file contains sequence identifiers not found in the fasta file, the VCF record is printed to the new file without updated annotations.
 * If your fasta file contains records not found in the VCF file they are skipped.
-* Uses and implementation of the `fasta.vmc` record file may change in the future as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely available.
+* Uses and implementation of the `fasta.vmc` file will change as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely available, and/or `vmccl` implements a SQL database backend.
 
 
-An example of parcing a VCF file with `vmccl` will include the following annotations:
+An example of annotations added to the VCF file:
 
 ```
-$> vmccl --fasta Chr1-GRCh37.fasta --vcf clinvar_20171002.vcf
-
 Added to the VCF header:
 ##INFO=<ID=VMCGAID,Number=1,Type=String,Description="VMC Allele identifier">
 ##INFO=<ID=VMCGLID,Number=1,Type=String,Description="VMC Location identifier">
 ##INFO=<ID=VMCGSID,Number=1,Type=String,Description="VMC Sequence identifier">
 
-Added annotations to the VCF record:
+Added annotations to the VCF INFO field:
 1       949523  183381  C       T       .       .       ALLELEID=181485;CLNDISDB=MedGen:C4015293,OMIM:616126,Orphanet:ORPHA319563;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification;CLNHGVS=NC_000001.10:g.949523C>T;CLNREVSTAT=no_assertion_criteria_provided;CLNSIG=Pathogenic;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;CLNVI=OMIM_Allelic_Variant:147571.0003;GENEINFO=ISG15:9636;MC=SO:0001587|nonsense;ORIGIN=1;RS=786201005;VMCGSID=VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U;VMCGLID=VMC:GL_VMC:GS_UqMzt_PvRNhrFl31m8N7SbCGdDpmAtsp;VMCGAID=VMC:GA_VMC:GS_-sajfzQq1Q_PfOAPMPQRodzFclkX8ksp
 ```
 
@@ -120,14 +118,36 @@ VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
 
 ```
 
+## Examples
 
-   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
-156291 u0413537  20   0 12.396g 0.010t   2040 S  1378  1.4 854:00.34 ./vmccl-linux --fasta human_g1k_v37_decoy.fasta
+The best practics method for adding VMC digest IDs to a VCF file are as follows:
 
-[u0413537@kingspeak36:vmcwork]$ time ./vmccl-linux --fasta human_g1k_v37_decoy.fasta
+1. First create a `fasta.vmc` file that will be used for all/future VCF updates.
+
+    ```
+    $> ./vmccl --fasta human_g1k_v37_decoy.fasta
+
+    $> ls -l *fasta*
+    human_g1k_v37_decoy.fasta 
+    human_g1k_v37_decoy.fasta.vmc
+    ```
+
+    * In general creating the `fasta.vmc` file will take longer then adding  annotations to a VCF file, so pre-building it will decrease future VCF runtimes.
+    * Please keep in mind the `.fasta` and `.fasta.vmc` file will need to be in the same location, or `vmccl` will rebuild the `.fasta.vmc` file.
 
 
+2. Run `vmccl` on your vcf file.
 
-real    69m15.154s
-user    480m26.563s
-sys     435m15.338s
+```
+$> ./vmccl --fasta human_g1k_v37_decoy.fasta --vcf clinvar_20180701.vcf.gz
+
+$> ls -l *fasta* *vcf*
+human_g1k_v37_decoy.fasta 
+human_g1k_v37_decoy.fasta.vmc
+
+clinvar_20180701.vcf.gz
+clinvar_20180701.vmc.vcf.gz
+```
+
+* Output VCF will always be gzip compressed.
+

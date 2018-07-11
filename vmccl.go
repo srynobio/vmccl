@@ -136,9 +136,9 @@ func digestFasta(file string, length int, wFile *os.File) {
 func digestVCF(file string, length int) {
 
 	outFName := strings.Replace(file, "vcf", "vmc.vcf", -1)
-	//if strings.HasSuffix(outFName, ".gz") {
-	//outFName = strings.Replace(outFName, ".gz", "", 1)
-	//}
+	if strings.HasSuffix(outFName, "gz") == false {
+		outFName = strings.Replace(outFName, "vcf", "vcf.gz", -1)
+	}
 
 	// open vcf file and read
 	fh, err := xopen.Ropen(file)
