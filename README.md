@@ -19,15 +19,14 @@ The follow input types are currently allowed:
 ## Usage
 
 ```
-$> vmccl --help
 Usage: vmccl [--stdin] [--blob BLOB] [--fasta FASTA] [--vcf VCF] [--logfile LOGFILE] [--length LENGTH]
 
 Options:
   --stdin                Read from stdin.
   --blob BLOB            Blob text to hash using the SHA-512 algorithm.
-  --fasta FASTA          Will return VMC Sequence digest of this fasta file.
-  --vcf VCF              Will take input VCF file and updated to include VMC digest IDs. Option Requires fasta or fasta.vmcseq file.
-  --logfile LOGFILE      Filename for output log file. [default: vmccl.log]
+  --fasta FASTA          Will return VMC Sequence digest ID of this fasta file.
+  --vcf VCF              Will take input VCF file and updated to include VMC (sequence|location|allele) digest IDs.
+  --logfile LOGFILE      Filename for output log file. [default: VMCCL.log]
   --length LENGTH        Length of digest id to return. MAX: 64 [default: 24]
   --help, -h             display this help and exit
 ```
@@ -68,6 +67,8 @@ Leading Identifier (space separated) | VMC Seq ID | Description line of fasta |
 -------------------------------------|------------|--------------------------|
 1|VMC:GS\_jqi61wB\_nLCsUMtCXsS0Yau\_pKxuS21U|1 dna:chromosome chromosome:GRCh37:1:1:249250621:1
 
+**The importance of using the correct fasta files to generate `VMC_GS` cannot be stressed enough as even a change of a single base will generate a completely different sequence identifier.  This is especially important when considering sharing `VMC_GA` with other institutions.** 
+
 #### VCF option:
 
 Please review the [example]() section for best practices instructions on how to run `vmccl`.
@@ -79,7 +80,7 @@ At this time to update a VCF file, an accompanying fasta file with a identical `
 * Only VCFs which have ran [vt decompose](https://genome.sph.umich.edu/wiki/Vt#Decompose) will be accepted.
 * If your VCF file contains sequence identifiers not found in the fasta file, the VCF record is printed to the new file without updated annotations.
 * If your fasta file contains records not found in the VCF file they are skipped.
-* Uses and implementation of the `fasta.vmc` file will change as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely available, and/or `vmccl` implements a SQL database backend.
+* Uses and implementation of the `fasta.vmc` file will change as the [seqrepo](https://github.com/biocommons/biocommons.seqrepo) becomes more widely available, and/when `vmccl` implements a SQL database backend.
 
 
 An example of annotations added to the VCF file:
@@ -153,7 +154,7 @@ clinvar_20180701.vmc.vcf.gz
 
 ### TODO
 
-Currency fasta generation utilizes parallel process.  Future released will incorporate parallel process for VCF updating.
+Currency fasta generation utilizes parallel process.  Future releases will incorporate parallel process for VCF updating.
 
 
 ### BUGS AND LIMITATIONS
