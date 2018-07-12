@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/srynobio/vmccl/blob/vcf/vmccllogo.png"><br><br>
+<img src="https://github.com/srynobio/vmccl/blob/master/vmccllogo.png"><br><br>
 </div>
 
 ## Variation Model Collaboration Command Line tool.
