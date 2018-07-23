@@ -177,7 +177,7 @@ func digestVCF(file string, length int) {
 		// Check for alternate allele.
 		altAllele := variant.Alt()
 		if len(altAllele) > 1 {
-			panic("Multi-allelic variant found, please pre-run vt on VCF file.")
+			panic("Multi-allelic variant found, please pre-run vt decompose on VCF file.")
 		}
 
 		if seqID, ok := fastaVMC[variant.Chromosome]; ok {
