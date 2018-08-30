@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/alexflint/go-arg"
 	"github.com/brentp/vcfgo"
@@ -22,10 +24,9 @@ var fastaVMC = make(map[string]string)
 func main() {
 
 	var args struct {
-		Stdin   bool   `help:"Read from stdin."`
-		Blob    string `help:"Blob text to hash using the SHA-512 algorithm."`
 		Fasta   string `help:"Will return VMC Sequence digest ID of this fasta file."`
 		VCF     string `help:"Will take input VCF file and updated to include VMC (sequence|location|allele) digest IDs."`
+		HGVS    string `help:"Valid HGVS expression to digest into VMC record." `
 		LogFile string `help:"Filename for output log file."`
 		Length  int    `help:"Length of digest id to return. MAX: 64"`
 	}
@@ -42,10 +43,8 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	// f, err := os.OpenFile("access.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	//seqIDFile, err := os.OpenFile(fastaVMCFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
-	if len(args.Fasta) > 1 && len(args.VCF) < 1 {
+	switch {
+	case len(args.Fasta) > 1 && len(args.VCF) > 1:
 		// Open of append if fasta.vmc file exists.
 		if _, err := os.Stat(fastaVMCFile); err != nil {
 			seqIDFile, err := os.Create(fastaVMCFile)
@@ -53,8 +52,7 @@ func main() {
 			defer seqIDFile.Close()
 			digestFasta(args.Fasta, args.Length, seqIDFile)
 		}
-	} else if len(args.VCF) > 1 && len(args.Fasta) > 1 {
-
+	case len(args.VCF) > 1 && len(args.Fasta) > 1:
 		// check if .fasta.vmc exists
 		if _, err := os.Stat(fastaVMCFile); err != nil {
 			seqIDFile, err := os.Create(fastaVMCFile)
@@ -70,24 +68,22 @@ func main() {
 			updateFastaMap(seqIDFile)
 			digestVCF(args.VCF, args.Length)
 		}
-	} else if len(args.Blob) > 1 {
+	case len(args.HGVS) > 1 && len(args.Fasta) > 1:
+		if _, err := os.Stat(fastaVMCFile); err != nil {
+			seqIDFile, err := os.Create(fastaVMCFile)
+			eCheck(err)
+			defer seqIDFile.Close()
+			digestFasta(args.Fasta, args.Length, seqIDFile)
+			digestHGVS(args.HGVS)
+		} else {
+			seqIDFile, err := os.Open(fastaVMCFile)
+			eCheck(err)
+			defer seqIDFile.Close()
 
-		clean := spaceScrubber(args.Blob)
-		byteForm := []byte(clean)
-		fmt.Println(Digest(byteForm, args.Length))
-
-	} else if args.Stdin {
-		scanner := bufio.NewScanner(os.Stdin)
-
-		stdinText := ""
-		for scanner.Scan() {
-			stdinText += scanner.Text()
+			updateFastaMap(seqIDFile)
+			digestHGVS(args.HGVS)
 		}
-		clean := spaceScrubber(stdinText)
-		toByte := []byte(clean)
-		fmt.Println(Digest(toByte, args.Length))
-
-	} else {
+	default:
 		panic("[ERROR] Required options not met.")
 	}
 	log.Println("vmccl finished!")
@@ -179,11 +175,13 @@ func digestVCF(file string, length int) {
 		if len(altAllele) > 1 {
 			panic("Multi-allelic variant found, please pre-run vt decompose on VCF file.")
 		}
+		state := altAllele[len(altAllele)-1]
 
 		if seqID, ok := fastaVMC[variant.Chromosome]; ok {
 
-			locationID := LocationDigest(seqID, variant)
-			alleleID := AlleleDigest(locationID, variant)
+			locationID := LocationDigest(seqID, uint64(variant.Start()), uint64(variant.End()))
+			alleleID := AlleleDigest(locationID, state)
+			/////alleleID := AlleleDigest(locationID, variant.Alt())
 
 			variant.Info().Set("VMCGSID", seqID)
 			variant.Info().Set("VMCGLID", locationID)
@@ -194,6 +192,84 @@ func digestVCF(file string, length int) {
 			writer.WriteVariant(variant)
 		}
 	}
+}
+
+// --------------------------------------------------------------------- //
+
+func digestHGVS(hgvs string) {
+
+	// Split the string into it's parts.
+	hgvsInfo := strings.Split(hgvs, ":")
+
+	var location []rune
+	var seq []string
+	for pos, x := range hgvsInfo[1] {
+
+		// if first position and prefix is 'g'
+		if pos == 0 && x != 103 {
+			panic("Currently on genomic HGVS expression are digested.")
+		}
+		// dont need g or '.'
+		if x == 103 || x == 46 {
+			continue
+		}
+		if unicode.IsNumber(x) {
+			location = append(location, x)
+			continue
+		}
+		if unicode.IsLetter(x) {
+			// Check for allowed
+			switch {
+			case x == 65:
+			case x == 67:
+			case x == 71:
+			case x == 84:
+			default:
+				warn := fmt.Sprintf("Sequence %s out not allowed", string(x))
+				panic(warn)
+			}
+			seq = append(seq, string(x))
+			continue
+		}
+	}
+
+	s := string(location)
+	toInt, err := strconv.Atoi(s)
+	eCheck(err)
+
+	// Define needed elements
+	start := uint64(toInt)
+	end := uint64(toInt)
+	state := seq[len(seq)-1]
+
+	if seqID, ok := fastaVMC[hgvsInfo[0]]; ok {
+		hgvsLocationDigest := LocationDigest(seqID, start, end)
+		hgvsAlleleDigest := AlleleDigest(hgvsLocationDigest, state)
+		fmt.Println(hgvsAlleleDigest)
+	}
+}
+
+// --------------------------------------------------------------------- //
+
+func LocationDigest(seqID string, start uint64, end uint64) string {
+
+	intervalString := fmt.Sprintf("%d|%d", start-1, end)
+	location := fmt.Sprintf("<Location|%s|<Interval|%s>>", seqID, intervalString)
+
+	DigestLocation := Digest([]byte(location), 24)
+	locationID := fmt.Sprintf("VMC:GL_%s", DigestLocation)
+	return locationID
+}
+
+// --------------------------------------------------------------------- //
+
+func AlleleDigest(locationID string, state string) string {
+
+	allele := fmt.Sprintf("<Allele|%s|%s>", locationID, state)
+	DigestAllele := Digest([]byte(allele), 24)
+
+	alleleID := fmt.Sprintf("VMC:GA_%s", DigestAllele)
+	return alleleID
 }
 
 // --------------------------------------------------------------------- //
@@ -209,30 +285,6 @@ func Digest(bv []byte, truncate int) string {
 
 // --------------------------------------------------------------------- //
 
-func LocationDigest(seqID string, vcfvar *vcfgo.Variant) string {
-
-	intervalString := fmt.Sprintf("%d|%d", uint64(vcfvar.Start()-1), uint64(vcfvar.End()))
-	location := fmt.Sprintf("<Location|%s|<Interval|%s>>", seqID, intervalString)
-	DigestLocation := Digest([]byte(location), 24)
-
-	locationID := fmt.Sprintf("VMC:GL_%s", DigestLocation)
-	return locationID
-}
-
-// --------------------------------------------------------------------- //
-
-func AlleleDigest(locationID string, vcf *vcfgo.Variant) string {
-
-	state := strings.Join(vcf.Alt(), "")
-	allele := fmt.Sprintf("<Allele|%s|%s>", locationID, state)
-	DigestAllele := Digest([]byte(allele), 24)
-
-	alleleID := fmt.Sprintf("VMC:GA_%s", DigestAllele)
-	return alleleID
-}
-
-// --------------------------------------------------------------------- //
-
 func updateFastaMap(file *os.File) {
 
 	log.Printf("Found fasta VMC record file: %s", file.Name())
@@ -244,15 +296,6 @@ func updateFastaMap(file *os.File) {
 
 		fastaVMC[records[0]] = records[1]
 	}
-}
-
-// --------------------------------------------------------------------- //
-
-func spaceScrubber(i string) string {
-	cleanEnds := strings.TrimSpace(i)
-	noSpace := strings.Replace(cleanEnds, " ", "", -1)
-
-	return noSpace
 }
 
 // --------------------------------------------------------------------- //
