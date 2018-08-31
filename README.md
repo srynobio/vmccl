@@ -11,21 +11,19 @@ The follow input types are currently allowed:
 
 * Fasta
 * VCF
-* STDIN
-* text blobs.
+* HGVS
 
-**Please keep in mind this tool only implements specfic aspects of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
+**Please keep in mind this tool only implements specific aspects of the entire [VMC model](https://docs.google.com/document/d/12E8WbQlvfZWk5NrxwLytmympPby6vsv60RxCeD5wc1E/edit). A VMC Bundle and JSON file are not generated or validated.**
 
 ## Usage
 
 ```
-Usage: vmccl [--stdin] [--blob BLOB] [--fasta FASTA] [--vcf VCF] [--logfile LOGFILE] [--length LENGTH]
+Usage: vmccl [--fasta FASTA] [--vcf VCF] [--hgvs HGVS] [--logfile LOGFILE] [--length LENGTH]
 
 Options:
-  --stdin                Read from stdin.
-  --blob BLOB            Blob text to hash using the SHA-512 algorithm.
   --fasta FASTA          Will return VMC Sequence digest ID of this fasta file.
   --vcf VCF              Will take input VCF file and updated to include VMC (sequence|location|allele) digest IDs.
+  --hgvs HGVS            Valid HGVS expression to digest into VMC record. Double quotes are required.
   --logfile LOGFILE      Filename for output log file. [default: VMCCL.log]
   --length LENGTH        Length of digest id to return. MAX: 64 [default: 24]
   --help, -h             display this help and exit
@@ -57,7 +55,7 @@ linux | amd64 | [linux](https://github.com/srynobio/vmccl/releases)
 
 Please review the [example](https://github.com/srynobio/vmccl/tree/vcf#examples) section for best practices instructions on how to run `vmccl`.
 
-#### Fasta option:
+#### Fasta:
 
 `vmccl` will run the VMC digest algorithm on each record in the fasta file.  It will store the results into a file of the same name, with a `.vmc` extension added.  Subsequent runs of `vmccl` will check for the presence of the `fasta.vmc` file in the same location as the original fasta file.
 
@@ -69,7 +67,7 @@ Leading Identifier (space separated) | VMC Seq ID | Description line of fasta |
 
 * **The importance of using the correct fasta files to generate `VMC_GS` cannot be stressed enough as even a change of a single base will generate a completely different sequence identifier.  This is especially important when considering sharing `VMC_GA` with other institutions.** 
 
-#### VCF option:
+#### VCF:
 
 Please review the [example]() section for best practices instructions on how to run `vmccl`.
 
@@ -95,31 +93,13 @@ Added annotations to the VCF INFO field:
 1       949523  183381  C       T       .       .       ALLELEID=181485;CLNDISDB=MedGen:C4015293,OMIM:616126,Orphanet:ORPHA319563;CLNDN=Immunodeficiency_38_with_basal_ganglia_calcification;CLNHGVS=NC_000001.10:g.949523C>T;CLNREVSTAT=no_assertion_criteria_provided;CLNSIG=Pathogenic;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;CLNVI=OMIM_Allelic_Variant:147571.0003;GENEINFO=ISG15:9636;MC=SO:0001587|nonsense;ORIGIN=1;RS=786201005;VMCGSID=VMC:GS_jqi61wB_nLCsUMtCXsS0Yau_pKxuS21U;VMCGLID=VMC:GL_VMC:GS_UqMzt_PvRNhrFl31m8N7SbCGdDpmAtsp;VMCGAID=VMC:GA_VMC:GS_-sajfzQq1Q_PfOAPMPQRodzFclkX8ksp
 ```
 
-#### STDIN option:
+#### HGVS:
 
-All `stdin` and `blob` text will have newlines and spaces removed.
-
-```
-$> wc -lmw irobot.txt
-6041   70216  403176 irobot.txt
-
-$> cat irobot.txt | vmccl --stdin
-VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0
-
-$> cat irobot.txt | vmccl --stdin --length 60
-VMC:GS_mbeo1K0MZwIHizAurCs2hYwA7LMyXSX0OQtVedGfpGBChEOV4jv58F1SeXpq0K5rUGsytqHm4_1oicIh
-
-```
-
-#### Blob option:
-
-```
-$> vmccl --blob "I, Robot Isaac Asimov. TO JOHN W. CAMPBELL, JR, who godfathered THE ROBOTS"
-VMC:GS_p6WvpVcb0_hJj5Y_4Za3o01Ln40R-Ijz
-
-```
+Currently `vmccl` will only digest simple HGVS [substitutions](http://varnomen.hgvs.org/recommendations/DNA/variant/substitution/) using the genomic (g) prefix.  Future release will begin to include a more dynamic range of HGVS types. Please refer to to examples section to see the standard HGVS run.
 
 ## Examples
+
+### VCF
 
 The best practice method for adding VMC digest IDs to a VCF file are as follows:
 
@@ -150,7 +130,21 @@ clinvar_20180701.vcf.gz
 clinvar_20180701.vmc.vcf.gz
 ```
 
-* Output VCF will always be gzip compressed.
+* Output VCFs files will always be gzip compressed.
+
+
+### HGVS
+
+As with VCF files, currently a matching fasta file is required.  Once ran `vmccl` will return the corresponding VMC_GA id.
+
+```
+Ensure double quotes are used.
+
+$> ./vmccl --hgvs "NC_000019.10:g.44908684C>T" --fasta data/NC_000019.10.fasta
+$> VMC:GA_AnJl99FJB5tNPupduz8I4R8CCuwCpIY0
+
+```
+
 
 ### TODO
 

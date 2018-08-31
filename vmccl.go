@@ -26,7 +26,7 @@ func main() {
 	var args struct {
 		Fasta   string `help:"Will return VMC Sequence digest ID of this fasta file."`
 		VCF     string `help:"Will take input VCF file and updated to include VMC (sequence|location|allele) digest IDs."`
-		HGVS    string `help:"Valid HGVS expression to digest into VMC record." `
+		HGVS    string `help:"Valid HGVS expression to digest into VMC record. Double quotes are required." `
 		LogFile string `help:"Filename for output log file."`
 		Length  int    `help:"Length of digest id to return. MAX: 64"`
 	}
