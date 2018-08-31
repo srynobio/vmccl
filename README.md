@@ -3,7 +3,7 @@
 </div>
 
 ## Variation Model Collaboration Command Line tool.
-#### Version: 1.1.2
+#### Version: 1.1.3
 
 Lightweight command line implementation of the VMC SHA-512 algorithm to allow rapid digest generation.
 
