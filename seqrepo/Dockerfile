@@ -1,0 +1,26 @@
+FROM ubuntu
+MAINTAINER Shawn Rynearson "shawn.rynearson@gmail.com"
+
+LABEL vender="UCGD"
+
+ENV VERSION 2018-10-03
+
+RUN apt-get update && apt-get install -y \
+	python3-dev \
+	gcc \
+	zlib1g-dev \
+	python3-pip \
+	python3-dev \
+	build-essential \
+	rsync \
+	tabix
+
+## install pip
+RUN pip3 install --upgrade pip 
+RUN pip3 install --upgrade virtualenv
+
+## build seqrepo
+RUN pip3 install seqrepo
+RUN mkdir /usr/local/share/seqrepo
+RUN seqrepo pull -i $VERSION
+
