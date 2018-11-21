@@ -44,7 +44,8 @@ func main() {
 	log.SetOutput(f)
 
 	switch {
-	case len(args.Fasta) > 1 && len(args.VCF) > 1:
+	case len(args.Fasta) > 1:
+		//case len(args.Fasta) > 1 && len(args.VCF) < 1:
 		// Open of append if fasta.vmc file exists.
 		if _, err := os.Stat(fastaVMCFile); err != nil {
 			seqIDFile, err := os.Create(fastaVMCFile)

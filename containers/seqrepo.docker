@@ -24,3 +24,4 @@ RUN pip3 install seqrepo
 RUN mkdir /usr/local/share/seqrepo
 RUN seqrepo pull -i $VERSION
 
+ENTRYPOINT seqrepo export -i $VERSION | grep '>' 
